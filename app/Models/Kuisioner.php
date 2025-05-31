@@ -9,6 +9,7 @@ class Kuisioner extends Model
     protected $table = 'kuisioner';
 
     protected $fillable = [
+        'siswa_id',
         'nama_wali_siswa',
         'nama_siswa',
         'kelas',
