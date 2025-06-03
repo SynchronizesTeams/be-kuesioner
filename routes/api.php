@@ -28,7 +28,7 @@ Route::middleware('auth:sanctum')->group(function() {
     Route::get('antrian/show/{user_id}', [KuisionerController::class, 'seeAntrian']);
 });
 
-
+Route::get('antrian/kelas/{kelas}', [KuisionerController::class, 'seeAntrianKelas']);
 
 Route::get('/export-kuesioner', function () {
     return Excel::download(new KuesionerExport, 'kuesioner.xlsx');

@@ -14,6 +14,13 @@ class KuisionerController extends Controller
     public function create(Request $request)
     {
     $user = auth()->user();
+    if ($user->is_ngisi == true) { 
+        return response()->json([
+            'success' => false,
+            'message' => 'Anda sudah mengisi kuisioner'
+        ]);
+    }
+
     $request->validate([
         'nama_wali_siswa' => 'required|string|max:255',
         'nama_siswa' => 'required|string|max:255',
@@ -42,9 +49,8 @@ class KuisionerController extends Controller
             'kritik_saran' => $request->kritik_saran,
         ]);
 
-        $user->update([
-            'is_ngisi' => true
-        ]);
+        $user->is_ngisi = true;
+        $user->save();
 
     });
 
@@ -67,9 +73,16 @@ class KuisionerController extends Controller
     }
 
     public function getAntrian() {
-        $user = auth()->user()->user_id;
+        $user = auth()->user();
 
-        $kelas = auth()->user()->kelas;
+        if ($user->is_ngisi == false) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda belum mengisi kuisioner'
+            ]);
+        }
+
+        $kelas = $user->kelas;
         $count = Kuisioner::where('kelas', '=', $kelas)->count();
 
         if ($count > 40) {
@@ -80,7 +93,7 @@ class KuisionerController extends Controller
 
         $no_antrian = $count + 1;
 
-        $user = User::where('user_id', '=', $user)->first();
+        $user = User::where('user_id', '=', $user->user_id)->first();
 
         $user->update([
             'no_antrian' => $no_antrian
@@ -97,6 +110,21 @@ class KuisionerController extends Controller
         return response()->json([
             'success' => true,
             'no_antrian' => $user->no_antrian
+        ]);
+    }
+
+    public function seeAntrianKelas($kelas) {
+        $user = User::where('kelas', '=', $kelas)->first();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kelas tidak ditemukan'
+            ]);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'data' => $user
         ]);
     }
 }
