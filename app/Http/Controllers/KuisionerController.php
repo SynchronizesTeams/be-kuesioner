@@ -23,8 +23,6 @@ class KuisionerController extends Controller
 
     $request->validate([
         'nama_wali_siswa' => 'required|string|max:255',
-        'nama_siswa' => 'required|string|max:255',
-        // 'kelas' => 'required|string|max:10',
         'tampilan_produk' => 'required|string|max:10',
         'tampilan_stand' => 'required|string|max:10',
         'penjelasan_produk' => 'required|string|max:10',
@@ -40,7 +38,7 @@ class KuisionerController extends Controller
         $newKuisioner = Kuisioner::create([
             'siswa_id' => $user->user_id,
             'nama_wali_siswa' => $request->nama_wali_siswa,
-            'nama_siswa' => $request->nama_siswa,
+            'nama_siswa' => $user->name,
             'kelas' => $user->kelas,
             'tampilan_produk' => $request->tampilan_produk,
             'tampilan_stand' => $request->tampilan_stand,
