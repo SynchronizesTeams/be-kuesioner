@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\KuesionerTamu;
 use App\Models\Kuisioner;
 use App\Models\User;
 use App\Models\UserIp;
 use Illuminate\Container\Attributes\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class KuisionerController extends Controller
 {
@@ -125,4 +126,41 @@ class KuisionerController extends Controller
             'data' => $user
         ]);
     }
+
+    public function createTamu(Request $request)
+    {
+    $request->validate([
+        'nama' => 'required|string|max:255',
+        'instansi' => 'required|string|max:255',
+        'tampilan_produk' => 'required|string|max:10',
+        'tampilan_stand' => 'required|string|max:10',
+        'penjelasan_produk' => 'required|string|max:10',
+        'hiburan' => 'required|string|max:10',
+        'kritik_saran' => 'required|string|max:1000',
+    ]);
+
+    $newKuisioner = null;
+
+    // Mulai transaksi database
+    DB::transaction(function () use ($request, &$newKuisioner) {
+        // Simpan data kuisioner
+        $newKuisioner = KuesionerTamu::create([
+            'nama' => $request->nama,
+            'instansi' => $request->instansi,
+            'tampilan_produk' => $request->tampilan_produk,
+            'tampilan_stand' => $request->tampilan_stand,
+            'penjelasan_produk' => $request->penjelasan_produk,
+            'hiburan' => $request->hiburan,
+            'kritik_saran' => $request->kritik_saran,
+        ]);
+
+
+    });
+
+    return response()->json([
+            'message' => 'Kuisioner berhasil dikirim',
+            'data' => $newKuisioner
+        ], 201);
+    }
+
 }
