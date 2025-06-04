@@ -19,12 +19,13 @@ Route::middleware('auth:sanctum')->group(function() {
     Route::get('antrian/show/{user_id}', [KuisionerController::class, 'seeAntrian']);
 });
 // POST ROUTE BUAT TAMU
-Route::post('/tamu', [KuisionerController::class, 'createTamu']);
+Route::post('/tamu/send', [KuisionerController::class, 'createTamu']);
 
 
 //  GET DATA FOR PUBLIC
 Route::get('antrian/kelas/{kelas}', [KuisionerController::class, 'seeAntrianKelas']);
-Route::get('show', [KuisionerController::class, 'show']);
+Route::get('/show/siswa', [KuisionerController::class, 'show']);
+Route::get('/show/tamu', [KuisionerController::class, 'showTamu']);
 
 Route::get('/export-kuesioner', function () {
     return Excel::download(new KuesionerExport, 'kuesioner.xlsx');

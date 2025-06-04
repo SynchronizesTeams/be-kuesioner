@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\UserIp;
 use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class KuisionerController extends Controller
@@ -61,13 +62,14 @@ class KuisionerController extends Controller
 
     public function show(Request $request)
     {
-        $data = Kuisioner::orderBy('id', 'asc')->paginate(10);
+        $cacheKey = "kuesioner_siswa";
+        $data = Cache::remember($cacheKey, 600, function () {
+           return Kuisioner::orderBy('id', 'asc')->get();
+        });
 
         return response()->json([
-            'data' => $data->items(), // Menampilkan data pada halaman saat ini
-            'current_page' => $data->currentPage(), // Halaman yang sedang aktif
-            'total_pages' => $data->lastPage(), // Total halaman
-            'total_items' => $data->total(), // Jumlah total item
+           'success' => true,
+            'data' => $data, // Menampilkan data pada halaman saat ini
         ]);
     }
 
@@ -163,4 +165,14 @@ class KuisionerController extends Controller
         ], 201);
     }
 
+    public function showTamu() {
+        $data = Cache::remember('kuesioner_tamu', 600, function () {
+            return KuesionerTamu::orderBy('id', 'asc')->get();
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $data, // Menampilkan data pada halaman saat ini
+        ]);
+    }
 }
