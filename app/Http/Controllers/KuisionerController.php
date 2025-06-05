@@ -115,7 +115,7 @@ class KuisionerController extends Controller
     }
 
     public function seeAntrianKelas($kelas) {
-        $user = User::where('kelas', '=', $kelas)->first();
+        $user = User::where('kelas', '=', $kelas)->where('is_ngisi', '=', true)->get();
         if (!$user) {
             return response()->json([
                 'success' => false,
