@@ -62,9 +62,8 @@ class KuisionerController extends Controller
 
     public function show(Request $request)
     {
-        $cacheKey = "kuesioner_siswa";
-        $data = Cache::remember($cacheKey, 600, function () {
-           return Kuisioner::orderBy('id', 'asc')->get();
+        $data = Cache::remember('kuesioner_siswa', 600, function () {
+            return Kuisioner::orderBy('id', 'asc')->get();
         });
 
         return response()->json([
