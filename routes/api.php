@@ -1,7 +1,7 @@
 <?php
 
 use App\Exports\KuesionerExport;
-use App\Exports\KuesionerTamu;
+use App\Exports\KuesionerTamuExport;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KuisionerController;
 use Illuminate\Http\Request;
@@ -33,6 +33,6 @@ Route::get('/export-kuesioner', function () {
 });
 
 Route::get('/export-kuesioner-tamu', function () {
-    return Excel::download(new KuesionerTamu, 'kuesioner-tamu.xlsx');
+    return Excel::download(new KuesionerTamuExport, 'kuesioner-tamu.xlsx');
 });
 
