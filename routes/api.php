@@ -34,3 +34,4 @@ Route::get('/export-kuesioner', function () {
 Route::get('/export-kuesioner-tamu', function () {
     return Excel::download(new KuesionerTamu, 'kuesioner-tamu.xlsx')
 });
+
