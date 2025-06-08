@@ -4,8 +4,10 @@ namespace App\Exports;
 
 use App\Models\KuesionerTamu;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
 
-class KuesionerTamuExport implements FromCollection
+class KuesionerTamuExport implements FromCollection, WithHeadings, WithMapping
 {
       /**
     * @return \Illuminate\Support\Collection
@@ -23,7 +25,7 @@ class KuesionerTamuExport implements FromCollection
         ])->get();
     }
 
-    public function headings() {
+    public function headings(): array {
         return [
             'Nama',
             'Instansi',
@@ -31,6 +33,21 @@ class KuesionerTamuExport implements FromCollection
             'Penjelasan Produk',
             'Hiburan',
             'Kritik & Saran'
+        ];
+    }
+
+    public function map($row): array
+    {
+        static $nomor = 1;
+
+        return [
+            $nomor++,
+            $row->nama,
+            $row->instansi,
+            $row->tampilan_produk,
+            $row->penjelasan_produk,
+            $row->hiburan,
+            $row->kritik_saran,
         ];
     }
 }
