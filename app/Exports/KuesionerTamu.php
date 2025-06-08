@@ -31,6 +31,6 @@ class KuesionerTamu implements FromCollection
             'Penjelasan Produk',
             'Hiburan',
             'Kritik & Saran'
-        ]
+        ];
     }
 }
