@@ -14,7 +14,7 @@ Route::middleware('auth:sanctum')->group(function() {
     Route::prefix('/kuesioner')->group(function () {
         Route::post('create', [KuisionerController::class, 'create']);
     });
-    
+
     Route::post('antrian/', [KuisionerController::class, 'getAntrian']);
     Route::get('antrian/show/{user_id}', [KuisionerController::class, 'seeAntrian']);
 });
@@ -29,4 +29,8 @@ Route::get('/show/tamu', [KuisionerController::class, 'showTamu']);
 
 Route::get('/export-kuesioner', function () {
     return Excel::download(new KuesionerExport, 'kuesioner.xlsx');
+});
+
+Route::get('/export-kuesioner-tamu', function () {
+    return Excel::download(new KuesionerTamu, 'kuesioner-tamu.xlsx')
 });
