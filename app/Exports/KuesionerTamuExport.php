@@ -27,6 +27,7 @@ class KuesionerTamuExport implements FromCollection, WithHeadings, WithMapping
 
     public function headings(): array {
         return [
+            'No',
             'Nama',
             'Instansi',
             'Tampilan Produk',
