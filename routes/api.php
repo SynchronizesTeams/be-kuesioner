@@ -1,6 +1,7 @@
 <?php
 
 use App\Exports\KuesionerExport;
+use App\Exports\KuesionerTamu;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KuisionerController;
 use Illuminate\Http\Request;
