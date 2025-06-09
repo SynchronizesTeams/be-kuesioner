@@ -16,7 +16,7 @@ class KuisionerController extends Controller
     public function create(Request $request)
     {
     $user = auth()->user();
-    if ($user->is_ngisi == true) { 
+    if ($user->is_ngisi == true) {
         return response()->json([
             'success' => false,
             'message' => 'Anda sudah mengisi kuisioner'
@@ -90,8 +90,11 @@ class KuisionerController extends Controller
                 'message' => 'Antrian sudah penuh'
             ], 400);
         }
-
-        $no_antrian = $count + 1;
+        if ($count == 1) {
+            $no_antrian = 1;
+        } else {
+            $no_antrian = $count + 1;
+        }
 
         $user = User::where('user_id', '=', $user->user_id)->first();
 
@@ -121,7 +124,7 @@ class KuisionerController extends Controller
                 'message' => 'Kelas tidak ditemukan'
             ]);
         }
-        
+
         return response()->json([
             'success' => true,
             'data' => $user
