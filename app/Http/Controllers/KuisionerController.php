@@ -83,17 +83,12 @@ class KuisionerController extends Controller
         }
 
         $kelas = $user->kelas;
-        $count = Kuisioner::where('kelas', '=', $kelas)->count();
+        $no_antrian = Kuisioner::where('kelas', '=', $kelas)->count();
 
-        if ($count > 40) {
+        if ($no_antrian > 40) {
             return response()->json([
                 'message' => 'Antrian sudah penuh'
             ], 400);
-        }
-        if ($count == 1) {
-            $no_antrian = 1;
-        } else {
-            $no_antrian = $count + 1;
         }
 
         $user = User::where('user_id', '=', $user->user_id)->first();
