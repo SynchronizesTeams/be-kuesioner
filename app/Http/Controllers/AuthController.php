@@ -46,12 +46,23 @@ class AuthController extends Controller
                 'name' => $request->name,
                 'nis' => $request->nis,
                 'kelas' => $request->kelas
-            ]);    
+            ]);
         });
 
         return response()->json([
             'success' => true,
             'data' => $user
+        ]);
+    }
+
+
+    public function logout(Request $request)
+    {
+        $request->user()->tokens()->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Logout success'
         ]);
     }
 }

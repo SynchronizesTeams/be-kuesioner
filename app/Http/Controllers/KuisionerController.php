@@ -58,6 +58,7 @@ class KuisionerController extends Controller
             'message' => 'Kuisioner berhasil dikirim',
             'data' => $newKuisioner
         ], 201);
+
     }
 
     public function show(Request $request)
