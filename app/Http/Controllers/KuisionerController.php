@@ -105,7 +105,7 @@ class KuisionerController extends Controller
 
         $user = User::where('user_id', $user->user_id)->lockForUpdate()->first();
 
-        $user->no_antrian = $no_antrian + 1;
+        $user->no_antrian = $no_antrian;
         $user->save();
 
         DB::commit();
