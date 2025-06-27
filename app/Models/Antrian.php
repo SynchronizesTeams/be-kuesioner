@@ -9,5 +9,6 @@ class Antrian extends Model
     protected $fillable = [
         'user_id',
         'kelas',
+        'no_antrian'
     ];
 }
