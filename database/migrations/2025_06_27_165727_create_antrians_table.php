@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('user_id')->unique();
             $table->string('kelas');
+            $table->integer('no_antrian');
             $table->timestamps();
 
             //FK

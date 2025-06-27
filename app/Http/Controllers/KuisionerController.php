@@ -15,79 +15,91 @@ use Illuminate\Support\Facades\DB;
 class KuisionerController extends Controller
 {
     public function create(Request $request)
-    {
-        $user = auth()->user();
+{
+    $user = auth()->user();
 
-        if ($user->is_ngisi) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda sudah mengisi kuisioner'
-            ]);
-        }
-
-        $request->validate([
-            'nama_wali_siswa' => 'required|string|max:255',
-            'tampilan_produk' => 'required|string|max:10',
-            'tampilan_stand' => 'required|string|max:10',
-            'penjelasan_produk' => 'required|string|max:10',
-            'hiburan' => 'required|string|max:10',
-            'kritik_saran' => 'required|string|max:1000',
+    // Pastikan user belum mengisi kuisioner
+    if ($user->is_ngisi) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Anda sudah mengisi kuisioner'
         ]);
+    }
 
-        DB::beginTransaction();
-        try {
-            // Hitung jumlah antrian di kelas ini
-            $countInClass = Antrian::where('kelas', $user->kelas)->count();
-            if ($countInClass >= 40) {
-                DB::rollBack();
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Antrian sudah penuh'
-                ], 400);
-            }
+    $request->validate([
+        'nama_wali_siswa'    => 'required|string|max:255',
+        'tampilan_produk'    => 'required|string|max:10',
+        'tampilan_stand'     => 'required|string|max:10',
+        'penjelasan_produk'  => 'required|string|max:10',
+        'hiburan'            => 'required|string|max:10',
+        'kritik_saran'       => 'required|string|max:1000',
+    ]);
 
-            // Simpan kuisioner
-            $newKuisioner = Kuisioner::create([
-                'siswa_id' => $user->user_id,
-                'nama_wali_siswa' => $request->nama_wali_siswa,
-                'nama_siswa' => $user->name,
-                'kelas' => $user->kelas,
-                'tampilan_produk' => $request->tampilan_produk,
-                'tampilan_stand' => $request->tampilan_stand,
-                'penjelasan_produk' => $request->penjelasan_produk,
-                'hiburan' => $request->hiburan,
-                'kritik_saran' => $request->kritik_saran,
-            ]);
+    DB::beginTransaction();
 
-            // Simpan entri antrian
-            $antrian = Antrian::create([
-                'user_id' => $user->user_id,
-                'kelas' => $user->kelas,
-            ]);
+    try {
+        // --- Perhitungan nomor antrian per kelas ---
+        // Kunci semua baris antrian untuk kelas user saat ini agar tidak ada race condition
+        $lastAntrian = Antrian::where('kelas', $user->kelas)
+                         ->lockForUpdate() // mengunci hasil SELECT untuk kelas tersebut
+                         ->orderBy('no_antrian', 'desc')
+                         ->first();
 
-            // Tandai user sudah ngisi dan simpan nomor antrian dari ID auto-increment
-            $user->update([
-                'is_ngisi' => true,
-                'no_antrian' => $antrian->id
-            ]);
+        // Nomor antrian berikutnya: jika belum ada, mulai dari 1
+        $nextNoAntrian = $lastAntrian ? $lastAntrian->no_antrian + 1 : 1;
 
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Kuisioner berhasil dikirim',
-                'no_antrian' => $antrian->id,
-                'data' => $newKuisioner
-            ], 201);
-        } catch (\Exception $e) {
+        // Aturan: maksimum 40 antrian per kelas
+        if ($nextNoAntrian > 40) {
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menyimpan kuisioner',
-                'error' => $e->getMessage()
-            ], 500);
+                'message' => 'Antrian sudah penuh'
+            ], 400);
         }
+
+        // --- Simpan data kuisioner ---
+        $newKuisioner = Kuisioner::create([
+            'siswa_id'          => $user->user_id,
+            'nama_wali_siswa'   => $request->nama_wali_siswa,
+            'nama_siswa'        => $user->name,
+            'kelas'             => $user->kelas,
+            'tampilan_produk'   => $request->tampilan_produk,
+            'tampilan_stand'    => $request->tampilan_stand,
+            'penjelasan_produk' => $request->penjelasan_produk,
+            'hiburan'           => $request->hiburan,
+            'kritik_saran'      => $request->kritik_saran,
+        ]);
+
+        // --- Buat entri antrian untuk kelas ini ---
+        $antrian = Antrian::create([
+            'user_id'    => $user->user_id,
+            'kelas'      => $user->kelas,
+            'no_antrian' => $nextNoAntrian,
+        ]);
+
+        // Tandai user sudah mengisi kuisioner dan simpan nomor antrian dari hasil perhitungan
+        $user->update([
+            'is_ngisi'   => true,
+            'no_antrian' => $nextNoAntrian
+        ]);
+
+        DB::commit();
+
+        return response()->json([
+            'success'     => true,
+            'message'     => 'Kuisioner berhasil dikirim',
+            'data'        => $newKuisioner,
+            'no_antrian'  => $nextNoAntrian
+        ], 201);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal menyimpan kuisioner',
+            'error'   => $e->getMessage()
+        ], 500);
     }
+}
 
 
     public function getAntrian()
