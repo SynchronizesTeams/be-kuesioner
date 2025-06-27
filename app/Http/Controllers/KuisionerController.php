@@ -14,9 +14,10 @@ use Illuminate\Support\Facades\DB;
 class KuisionerController extends Controller
 {
     public function create(Request $request)
-    {
+{
     $user = auth()->user();
-    if ($user->is_ngisi == true) {
+
+    if ($user->is_ngisi) {
         return response()->json([
             'success' => false,
             'message' => 'Anda sudah mengisi kuisioner'
@@ -33,10 +34,27 @@ class KuisionerController extends Controller
     ]);
 
     $newKuisioner = null;
+    $noAntrian = null;
 
-    // Mulai transaksi database
-    DB::transaction(function () use ($request, $user, &$newKuisioner) {
-        // Simpan data kuisioner
+    DB::beginTransaction();
+
+    try {
+        // Lock semua kuisioner untuk kelas yang sama
+        $kelas = $user->kelas;
+
+        $jumlahAntrian = Kuisioner::where('kelas', $kelas)
+            ->lockForUpdate()
+            ->count();
+
+        if ($jumlahAntrian >= 40) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Antrian sudah penuh'
+            ], 400);
+        }
+
+        // Simpan kuisioner
         $newKuisioner = Kuisioner::create([
             'siswa_id' => $user->user_id,
             'nama_wali_siswa' => $request->nama_wali_siswa,
@@ -49,17 +67,31 @@ class KuisionerController extends Controller
             'kritik_saran' => $request->kritik_saran,
         ]);
 
+        // Tandai user sudah mengisi dan simpan nomor antrian
         $user->is_ngisi = true;
+        $user->no_antrian = $jumlahAntrian + 1;
         $user->save();
 
-    });
+        DB::commit();
 
-    return response()->json([
+        return response()->json([
+            'success' => true,
             'message' => 'Kuisioner berhasil dikirim',
-            'data' => $newKuisioner
+            'data' => $newKuisioner,
+            'no_antrian' => $user->no_antrian
         ], 201);
 
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Terjadi kesalahan saat menyimpan kuisioner',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
+
 
     public function show(Request $request)
     {
@@ -74,7 +106,7 @@ class KuisionerController extends Controller
     }
 
     public function getAntrian()
-{
+    {
     $user = auth()->user();
 
     if (!$user->is_ngisi) {
