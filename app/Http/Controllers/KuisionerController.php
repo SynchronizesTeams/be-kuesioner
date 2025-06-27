@@ -73,36 +73,55 @@ class KuisionerController extends Controller
         ]);
     }
 
-    public function getAntrian() {
-        $user = auth()->user();
+    public function getAntrian()
+{
+    $user = auth()->user();
 
-        if ($user->is_ngisi == false) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda belum mengisi kuisioner'
-            ]);
-        }
+    if (!$user->is_ngisi) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Anda belum mengisi kuisioner'
+        ]);
+    }
 
+    // Pastikan proses atomic
+    DB::beginTransaction();
+
+    try {
+        // Lock semua row kuisioner dari kelas yang sama
         $kelas = $user->kelas;
-        $no_antrian = Kuisioner::where('kelas', '=', $kelas)->count();
 
-        if ($no_antrian > 40) {
+        // Lock baris yang relevan untuk menghindari race condition
+        $no_antrian = Kuisioner::where('kelas', $kelas)
+            ->lockForUpdate() // ini penting
+            ->count();
+
+        if ($no_antrian >= 40) {
+            DB::rollBack();
             return response()->json([
                 'message' => 'Antrian sudah penuh'
             ], 400);
         }
 
-        $user = User::where('user_id', '=', $user->user_id)->first();
+        $user = User::where('user_id', $user->user_id)->lockForUpdate()->first();
 
-        $user->update([
-            'no_antrian' => $no_antrian
-        ]);
+        $user->no_antrian = $no_antrian + 1;
+        $user->save();
+
+        DB::commit();
 
         return response()->json([
             'message' => 'Antrian berhasil diambil',
-            'no_antrian' => $no_antrian
+            'no_antrian' => $user->no_antrian
         ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'message' => 'Terjadi kesalahan saat mengambil antrian',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 
     public function seeAntrian($user_id) {
         $user = User::where('user_id', '=', $user_id)->first();
