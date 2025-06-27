@@ -19,9 +19,8 @@ return new class extends Migration
 
             //FK
             $table->index('user_id');
-            $table->index('kelas');
             $table->foreign('user_id')->references('user_id')->on('users')->onDelete('cascade');
-            $table->foreign('kelas')->references('kelas')->on('users')->onDelete('cascade');
+
         });
     }
 
