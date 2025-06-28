@@ -221,4 +221,12 @@ class KuisionerController extends Controller
             'data' => $data, // Menampilkan data pada halaman saat ini
         ]);
     }
+
+    public function show() {
+        $data = Kuisioner::get();
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
 }
